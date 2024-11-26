@@ -3,6 +3,7 @@
 #include "imgui_impl_opengl3.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "graphics.h"
 #include "genetic.h"
 #include "gui.h"
 #include <iostream>
@@ -12,6 +13,10 @@ void glfw_error_callback(int error, const char* description) {
 }
 
 int main() {
+    int argc = 0;
+    char* argv[argc] = {};
+    glutInit(&argc, argv);
+
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return 1;
 
@@ -28,14 +33,41 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
+	std::shared_ptr<PhysicalKeyboard> keyboard = std::make_shared<PhysicalKeyboard>();
+
     GUI gui;
     gui.initialize();
 
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-        gui.render();
-        glfwSwapBuffers(window);
-    }
+	// Main rendering loop
+	while (!glfwWindowShouldClose(window)) {
+		glfwPollEvents();
+
+		// Clear the screen
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Dark background
+		// glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // NEW
+		glDisable(GL_DEPTH_TEST); // NEW 
+
+		// Set up 2D orthographic projection
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluOrtho2D(0.0, 10.0, -3.0, 0.0); // Adjust bounds to fit the keyboard grid
+
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		// Render the keyboard
+		{
+			std::lock_guard<std::mutex> lock(dataMutex);
+			renderKeyboard(*keyboard, bestLayout);
+		}
+
+		// Render the GUI on top
+		gui.render();
+
+		// Swap buffers
+		glfwSwapBuffers(window);
+	}
 
     gui.cleanup();
     ImGui_ImplOpenGL3_Shutdown();

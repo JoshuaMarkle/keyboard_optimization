@@ -69,11 +69,12 @@ void GUI::render() {
                          *std::max_element(generationValues.begin(), generationValues.end()), ImVec2(0, 150));
     }
 
-    ImGui::Text("Best Layout:");
-    if (!bestLayout.empty()) {
-        std::lock_guard<std::mutex> lock(dataMutex);
-        for (char c : bestLayout) ImGui::Text("%c", c);
-    }
+	ImGui::Text("Best Layout:");
+	if (!bestLayout.empty()) {
+		std::lock_guard<std::mutex> lock(dataMutex);
+		std::string layoutString(bestLayout.begin(), bestLayout.end());
+		ImGui::Text("%s", layoutString.c_str());
+	}
 
     ImGui::End();
     ImGui::Render();

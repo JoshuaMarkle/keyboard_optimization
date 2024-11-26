@@ -125,13 +125,14 @@ void geneticAlgorithm(std::shared_ptr<PhysicalKeyboard> keyboard, const std::str
         auto selected = selectPopulation(population, fitness, populationSize / 2);
 
         std::vector<std::vector<char>> newPopulation = selected;
-        while (newPopulation.size() < populationSize) {
+
+		while (newPopulation.size() < static_cast<std::vector<std::vector<char>>::size_type>(populationSize)) {
             const auto& parent1 = selected[std::rand() % selected.size()];
             const auto& parent2 = selected[std::rand() % selected.size()];
             auto child = crossover(parent1, parent2);
             mutate(child, mutationRate);
             newPopulation.push_back(child);
-        }
+		}
 
         population = newPopulation;
 

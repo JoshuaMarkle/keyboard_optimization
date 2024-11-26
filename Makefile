@@ -6,12 +6,13 @@ OBJ_DIR = obj
 # Compiler and flags
 CC = g++
 CFLAGS = -Wall -Wextra -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -O3
-LIBS = -lglfw -lGL -lGLEW
+LIBS = -lGL -lGLU -lglut -lglfw -lGLEW
 
 # Source files
 SRC = $(SRC_DIR)/main.cpp \
       $(SRC_DIR)/gui.cpp \
       $(SRC_DIR)/genetic.cpp \
+      $(SRC_DIR)/graphics.cpp \
       $(IMGUI_DIR)/imgui.cpp \
       $(IMGUI_DIR)/imgui_draw.cpp \
       $(IMGUI_DIR)/imgui_widgets.cpp \
