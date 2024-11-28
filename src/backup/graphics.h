@@ -2,9 +2,7 @@
 #define GRAPHICS_H
 
 #include "genetic.h"
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/freeglut.h>
+#include "imgui.h"
 #include <vector>
 #include <string>
 

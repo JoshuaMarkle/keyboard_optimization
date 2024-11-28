@@ -3,78 +3,185 @@
 #include "imgui_impl_opengl3.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "graphics.h"
-#include "genetic.h"
-#include "gui.h"
 #include <iostream>
 
-void glfw_error_callback(int error, const char* description) {
-    std::cerr << "GLFW Error " << error << ": " << description << std::endl;
-}
+const int WIDTH = 800, HEIGHT = 600;
+
+// Windows
+bool shouldExit = false;
+static bool windowControlPanel = true, windowPhysicalKeyboard = false;
+
+// Variables
+static int generations = 100;
+static float mutationRate = 0.1f;
+static float weightDistance = 1.0f, weightEffort = 1.0f;
+
+void drawGui(GLFWwindow* window);
+void drawMainMenuBar(GLFWwindow* window);
+void drawControlPanel(GLFWwindow* window);
+void drawKeyboard();
 
 int main() {
-    int argc = 0;
-    char* argv[argc] = {};
-    glutInit(&argc, argv);
-
-    glfwSetErrorCallback(glfw_error_callback);
-    if (!glfwInit()) return 1;
-
-    GLFWwindow* window = glfwCreateWindow(1200, 800, "Keyboard Optimizer", nullptr, nullptr);
-    if (!window) return 1;
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
-    if (glewInit() != GLEW_OK) return 1;
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
-
-	std::shared_ptr<PhysicalKeyboard> keyboard = std::make_shared<PhysicalKeyboard>();
-
-    GUI gui;
-    gui.initialize();
-
-	// Main rendering loop
-	while (!glfwWindowShouldClose(window)) {
-		glfwPollEvents();
-
-		// Clear the screen
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Dark background
-		// glClear(GL_COLOR_BUFFER_BIT);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // NEW
-		glDisable(GL_DEPTH_TEST); // NEW 
-
-		// Set up 2D orthographic projection
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluOrtho2D(0.0, 10.0, -3.0, 0.0); // Adjust bounds to fit the keyboard grid
-
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
-		// Render the keyboard
-		{
-			std::lock_guard<std::mutex> lock(dataMutex);
-			renderKeyboard(*keyboard, bestLayout);
-		}
-
-		// Render the GUI on top
-		gui.render();
-
-		// Swap buffers
-		glfwSwapBuffers(window);
+	if (!glfwInit()) {
+		std::cerr << "Failed to init GLFW!" << std::endl;
+		return -1;
 	}
 
-    gui.cleanup();
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    glfwDestroyWindow(window);
-    glfwTerminate();
+	// Init OpenGL + window
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "opengl", NULL, NULL);
+	if (!window) {
+		std::cerr << "Failed to create window!" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1);
 
-    return 0;
+	// Init Glew
+	glewExperimental = GL_TRUE;
+	if (glewInit() != GLEW_OK) {
+		std::cerr << "Failed to init Glew!" << std::endl;
+		return -1;
+	}
+
+	// Init ImGui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	(void) io;
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+	ImGui::StyleColorsDark();
+
+	// Main loop
+	while (!glfwWindowShouldClose(window) && !shouldExit) {
+		glfwPollEvents();
+		drawGui(window);
+	}
+
+	// Cleanup
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+	glfwDestroyWindow(window);
+	glfwTerminate();
+
+	return 0;
 }
+
+void drawGui(GLFWwindow* window) {
+	// Create Frame + Fullscreen
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	// ImGui::SetNextWindowPos(ImVec2(0, 0));
+	// ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+
+	// Windows
+	drawMainMenuBar(window);
+	if (windowControlPanel)
+		drawControlPanel(window);
+	if (windowPhysicalKeyboard)
+		drawKeyboard();
+
+	// Render GUI
+	ImGui::Render();
+	int display_w, display_h;
+	glfwGetFramebufferSize(window, &display_w, &display_h);
+	glViewport(0, 0, display_w, display_h);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	glfwSwapBuffers(window);
+}
+
+void drawControlPanel(GLFWwindow* window) {
+	ImGui::Begin("Control Panel", NULL, NULL);
+	if (ImGui::Button("Start Optimization"))
+		std::cout << "START OPTIMIZATION" << std::endl;
+	if (ImGui::CollapsingHeader("Optimization Algorithm", ImGuiTreeNodeFlags_DefaultOpen)) {
+		// ImGui::SeparatorText("Parameters");
+		ImGui::InputInt("Generations", &generations);
+		ImGui::SliderFloat("Mutation Rate", &mutationRate, 0.0f, 1.0f);
+	}
+	if (ImGui::CollapsingHeader("Keyboard Evaluator", ImGuiTreeNodeFlags_DefaultOpen)) {
+		// ImGui::SeparatorText("Weights");
+		ImGui::SliderFloat("Distance", &weightDistance, 0.0f, 1.0f);
+		ImGui::SliderFloat("Effort", &weightEffort, 0.0f, 1.0f);
+	}
+	ImGui::End();
+}
+
+void drawKeyboard() {
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(50.0f, 50.0f));
+    ImGui::Begin("Custom Keyboard", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+
+    // Define the keyboard layout
+    const char* rows[] = {
+        "1234567890",
+        "QWERTYUIOP",
+        "ASDFGHJKL",
+        "ZXCVBNM"
+    };
+
+    // Key dimensions and spacing
+    const float keyWidth = 40.0f;
+    const float keyHeight = 40.0f;
+    const float keySpacingX = 5.0f;
+    const float keySpacingY = 5.0f;
+
+    // Starting position for the keyboard relative to the frame
+    float startX = 50.0f, startY = 50.0f;
+    float x = startX, y = startY;
+
+    // Loop through rows
+    for (int row = 0; row < 4; row++) {
+        x = startX + row * keySpacingX;
+        for (const char* c = rows[row]; *c; ++c) {
+            ImGui::SetCursorPos(ImVec2(x, y));
+            if (ImGui::Button(std::string(1, *c).c_str(), ImVec2(keyWidth, keyHeight))) {
+                // std::cout << "Key Pressed: " << *c << std::endl;
+            }
+            x += keyWidth + keySpacingX;
+        }
+        y += keyHeight + keySpacingY;
+    }
+
+	ImGui::PopStyleVar();
+    ImGui::End();
+}
+
+
+void drawMainMenuBar(GLFWwindow* window) {
+    if (ImGui::BeginMainMenuBar()) {
+        // File Menu
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("New"))
+                std::cout << "New file clicked!" << std::endl;
+            if (ImGui::MenuItem("Open"))
+                std::cout << "Open file clicked!" << std::endl;
+            if (ImGui::MenuItem("Save"))
+                std::cout << "Save file clicked!" << std::endl;
+            if (ImGui::MenuItem("Exit"))
+				shouldExit = true;
+
+            ImGui::EndMenu();
+        }
+
+        // View Menu
+        if (ImGui::BeginMenu("View")) {
+            if (ImGui::MenuItem("Control Panel", nullptr, windowControlPanel))
+				windowControlPanel = !windowControlPanel;
+            if (ImGui::MenuItem("Physical Keyboard", nullptr, windowPhysicalKeyboard))
+				windowPhysicalKeyboard = !windowPhysicalKeyboard;
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
+}
+

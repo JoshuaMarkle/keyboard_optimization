@@ -62,19 +62,19 @@ void GUI::render() {
         ImGui::TreePop();
     }
 
-    ImGui::Text("Generational Progress");
-    if (!generationValues.empty()) {
-        std::lock_guard<std::mutex> lock(dataMutex);
-        ImGui::PlotLines("Best Value per Generation", generationValues.data(), generationValues.size(), 0, nullptr, 0.0f,
-                         *std::max_element(generationValues.begin(), generationValues.end()), ImVec2(0, 150));
-    }
-
 	ImGui::Text("Best Layout:");
 	if (!bestLayout.empty()) {
 		std::lock_guard<std::mutex> lock(dataMutex);
 		std::string layoutString(bestLayout.begin(), bestLayout.end());
 		ImGui::Text("%s", layoutString.c_str());
 	}
+
+    ImGui::Text("Generational Progress");
+    if (!generationValues.empty()) {
+        std::lock_guard<std::mutex> lock(dataMutex);
+        ImGui::PlotLines("Best Value per Generation", generationValues.data(), generationValues.size(), 0, nullptr, 0.0f,
+                         *std::max_element(generationValues.begin(), generationValues.end()), ImVec2(0, 150));
+    }
 
     ImGui::End();
     ImGui::Render();

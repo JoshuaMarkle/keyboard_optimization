@@ -143,7 +143,7 @@ void geneticAlgorithm(std::shared_ptr<PhysicalKeyboard> keyboard, const std::str
 
             logs.push_back("Generation " + std::to_string(gen + 1) + ": Best Fitness = " +
                            std::to_string(generationValues.back()));
-            if (logs.size() > 50) logs.pop_front();
+            // if (logs.size() > 50) logs.pop_front();
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
