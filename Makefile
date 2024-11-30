@@ -5,21 +5,21 @@ OBJ_DIR = obj
 
 # Compiler and flags
 CC = g++
-CFLAGS = -Wall -Wextra -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -O3
+CFLAGS = -Wall -Wextra -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 LIBS = -lGL -lGLU -lglut -lglfw -lGLEW
 
 # Source files
-SRC = $(SRC_DIR)/main.cpp \
-      $(SRC_DIR)/gui.cpp \
-      $(SRC_DIR)/genetic.cpp \
-      $(SRC_DIR)/graphics.cpp \
-      $(IMGUI_DIR)/imgui.cpp \
+SRC = $(IMGUI_DIR)/imgui.cpp \
       $(IMGUI_DIR)/imgui_draw.cpp \
       $(IMGUI_DIR)/imgui_widgets.cpp \
       $(IMGUI_DIR)/imgui_tables.cpp \
       $(IMGUI_DIR)/imgui_demo.cpp \
       $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp \
-      $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
+      $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp \
+	  $(SRC_DIR)/main.cpp \
+      $(SRC_DIR)/gui.cpp \
+      $(SRC_DIR)/optimize.cpp
+      # $(SRC_DIR)/graphics.cpp \
 
 # Object files in the obj directory
 OBJ = $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(SRC))
