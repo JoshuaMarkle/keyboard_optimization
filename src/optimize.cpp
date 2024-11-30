@@ -31,7 +31,7 @@ std::vector<char> findBestLayout(const std::vector<std::vector<char>>& populatio
 int runAlgorithm() {
     // Parameters for genetic algorithm
     std::string characters = "abcdefghijklmnopqrstuvwxyz";
-    int populationSize = 100;
+    int populationSize = 1000;
     int generations = 1000;
     float mutationRate = 0.05;
 

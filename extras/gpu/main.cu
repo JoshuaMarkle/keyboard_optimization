@@ -179,8 +179,8 @@ void runGeneticAlgorithmGPU(int populationSize, int generations, float mutationR
 
 int main() {
     const std::string characters = "abcdefghijklmnopqrstuvwxyz";
-    const int populationSize = 10000;
-    const int generations = 10000;
+    const int populationSize = 1000;
+    const int generations = 1000;
     const float mutationRate = 0.05;
 
     runGeneticAlgorithmGPU(populationSize, generations, mutationRate, characters);
