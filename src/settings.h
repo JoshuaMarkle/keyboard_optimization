@@ -32,6 +32,8 @@ public:
 
 extern PhysicalKeyboard keyboard;
 extern std::vector<char> bestLayout;
+extern double bestFitness;
+extern std::vector<float> fitnessHistory;
 
 // Optimization Parameters
 extern int populationSize;

@@ -8,13 +8,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <algorithm>
 
 const int WIDTH = 800, HEIGHT = 600;
 
 // Windows
 static GLFWwindow* window;
 static bool shouldExit = false;
-static bool windowControlPanel = true, windowStatistics = false, windowPhysicalKeyboard = false;
+static bool windowControlPanel = true, windowStatistics = true, windowPhysicalKeyboard = true;
 
 int setupGui();
 int guiLoop();
@@ -178,7 +179,23 @@ void drawStatisticsPanel() {
     else 
 		ImGui::Text("Simulation is Running: False");
 	ImGui::Text(("Generation: " + std::to_string(1)).c_str());
+	ImGui::Text(("Best Fitness: " + std::to_string(bestFitness)).c_str());
 	ImGui::Text(("Best Layout: " + getBestLayout()).c_str());
+
+	// Draw the fitness graph
+	if (!fitnessHistory.empty()) {
+		ImGui::Text("Fitness Over Generations:");
+		ImGui::PlotLines(
+			"Best Fitness",                // Label
+			fitnessHistory.data(),         // Data
+			fitnessHistory.size(),         // Data size
+			0,                             // Offset
+			nullptr,                       // Overlay text
+			fitnessHistory[0],             // Min scale
+			*std::max_element(fitnessHistory.begin(), fitnessHistory.end()), // Max scale
+			ImVec2(0, 150)); // Graph size (width = auto, height = 150px)
+	}
+
 	ImGui::End();
 }
 
@@ -199,9 +216,12 @@ void drawKeyboardPanel() {
 		Key& key = keyboard.keys[i];
 		lowestKeyY = std::min(lowestKeyY, key.y);
 		ImGui::SetCursorPos(ImVec2(key.x * keySpacingX + startX, key.y * keySpacingY + startY));
-		if (ImGui::Button((std::to_string(i)).c_str(), ImVec2(keyWidth, keyHeight))) {
-			std::cout << "Key Pressed" << std::endl;
+		if (i < bestLayout.size()) {
+			char buttonLabel[2] = { bestLayout[i], '\0' };
+			if (ImGui::Button(buttonLabel, ImVec2(keyWidth, keyHeight))) {}
 		}
+		else
+			if (ImGui::Button((std::to_string(i)).c_str(), ImVec2(keyWidth, keyHeight))) {}
 	}
 
 	ImGui::PopStyleVar();

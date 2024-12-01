@@ -4,6 +4,8 @@
 
 // Global variables
 std::vector<char> bestLayout;
+double bestFitness;
+std::vector<float> fitnessHistory;
 PhysicalKeyboard keyboard;
 
 // Optimization Variables

@@ -55,8 +55,9 @@ int runAlgorithm() {
 		// Update the best layout
 		std::vector<char> logBestLayout = findBestLayout(population);
 		updateBestLayout(logBestLayout);
-		double bestFitness = layoutValue(logBestLayout);
-		std::cout << "Best Fitness = " << bestFitness << " | " << std::string(logBestLayout.begin(), logBestLayout.end()) << std::endl;
+		bestFitness = layoutValue(logBestLayout);
+		fitnessHistory.push_back((float) bestFitness);
+		// std::cout << "Best Fitness = " << bestFitness << " | " << std::string(logBestLayout.begin(), logBestLayout.end()) << std::endl;
     }
 
     return 0;
@@ -67,7 +68,7 @@ double layoutValue(const std::vector<char>& layout) {
     double value = 0.0;
     for (size_t i = 0; i < layout.size(); ++i) {
         char c = layout[i];
-        double freq = (0 <= c && c <= 26) ? frequency[c - 'a'] : 0.0;
+		double freq = ('a' <= c && c <= 'z') ? frequency[c - 'a'] : 0.0;
 
         if (keyboard.keys[i].finger == 0 || keyboard.keys[i].finger == 9)
             value -= freq * 2;
@@ -130,16 +131,16 @@ void mutate(std::vector<char>& layout, float mutationRate) {
 }
 
 std::vector<char> findBestLayout(const std::vector<std::vector<char>>& population) {
-    double bestFitness = -1e9;
-	std::vector<char> bestLayoutTracker;
+    double bestFitnessLocal = -1e9;
+	std::vector<char> bestLayoutLocal;
 
     for (const auto& layout : population) {
         double fitness = layoutValue(layout);
-        if (fitness > bestFitness) {
-            bestFitness = fitness;
-            bestLayout = bestLayoutTracker;
+        if (fitness > bestFitnessLocal) {
+            bestFitnessLocal = fitness;
+			bestLayoutLocal = layout;
         }
     }
 
-    return bestLayoutTracker;
+    return bestLayoutLocal;
 }
