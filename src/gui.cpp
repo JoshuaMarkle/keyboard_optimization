@@ -178,15 +178,16 @@ void drawStatisticsPanel() {
 		ImGui::Text("Simulation is Running: True");
     else 
 		ImGui::Text("Simulation is Running: False");
-	ImGui::Text(("Generation: " + std::to_string(1)).c_str());
+	ImGui::Text(("Generation: " + std::to_string(currentGeneration)).c_str());
 	ImGui::Text(("Best Fitness: " + std::to_string(bestFitness)).c_str());
 	ImGui::Text(("Best Layout: " + getBestLayout()).c_str());
 
 	// Draw the fitness graph
 	if (!fitnessHistory.empty()) {
+		ImGui::Separator();
 		ImGui::Text("Fitness Over Generations:");
 		ImGui::PlotLines(
-			"Best Fitness",                // Label
+			" ",                            // Label
 			fitnessHistory.data(),         // Data
 			fitnessHistory.size(),         // Data size
 			0,                             // Offset
@@ -200,11 +201,12 @@ void drawStatisticsPanel() {
 }
 
 void drawKeyboardPanel() {
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(50.0f, 50.0f));
+	// ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(50.0f, 50.0f));
     ImGui::Begin("Custom Keyboard", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+	// ImGui::PopStyleVar();
 
     // Key dimensions and spacing
-    const float startX = 50.0f, startY = 50.0f;
+    const float startX = 10.0f, startY = 25.0f;
     const float keyWidth = 40.0f;
     const float keyHeight = 40.0f;
     const float keySpacingX = keyWidth + 5.0f;
@@ -222,9 +224,17 @@ void drawKeyboardPanel() {
 		}
 		else
 			if (ImGui::Button((std::to_string(i)).c_str(), ImVec2(keyWidth, keyHeight))) {}
+		if (ImGui::IsItemHovered()) {
+			ImGui::BeginTooltip();
+			ImGui::Text(("id: " + std::to_string(i)).c_str());
+			ImGui::Text(("x: " + std::to_string(key.x)).c_str());
+			ImGui::Text(("y: " + std::to_string(key.y)).c_str());
+			ImGui::Text(("hand: " + std::to_string(key.hand)).c_str());
+			ImGui::Text(("finger: " + std::to_string(key.finger)).c_str());
+			ImGui::EndTooltip();
+		}
 	}
 
-	ImGui::PopStyleVar();
 	if(ImGui::CollapsingHeader("Physical Keyboard Customization")) {
 		// Procedurally generate keyboard tree
 		if (ImGui::TreeNode("Keyboard Data")) {

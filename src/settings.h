@@ -31,6 +31,7 @@ public:
 };
 
 extern PhysicalKeyboard keyboard;
+extern int currentGeneration;
 extern std::vector<char> bestLayout;
 extern double bestFitness;
 extern std::vector<float> fitnessHistory;

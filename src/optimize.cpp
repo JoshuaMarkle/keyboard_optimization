@@ -34,6 +34,7 @@ int runAlgorithm() {
 
     // Run genetic algorithm
     for (int gen = 0; gen < generations; ++gen) {
+		currentGeneration = gen;
         std::vector<double> fitness;
         for (const auto& layout : population) {
             fitness.push_back(layoutValue(layout));

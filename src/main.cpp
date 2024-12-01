@@ -3,6 +3,7 @@
 #include "threading.h"
 
 // Global variables
+int currentGeneration;
 std::vector<char> bestLayout;
 double bestFitness;
 std::vector<float> fitnessHistory;
