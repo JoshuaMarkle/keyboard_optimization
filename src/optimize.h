@@ -34,6 +34,8 @@ public:
     int keyCount() const { return keys.size(); }
 };
 
+extern PhysicalKeyboard keyboard;
+
 int runAlgorithm();
 double layoutValue(const std::vector<char>& layout, const PhysicalKeyboard& keyboard);
 std::vector<char> randomLayout(const std::string& characters);

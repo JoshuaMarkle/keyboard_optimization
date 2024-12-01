@@ -1,4 +1,5 @@
 #include "gui.h"
+#include "optimize.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -11,7 +12,7 @@ const int WIDTH = 800, HEIGHT = 600;
 // Windows
 static GLFWwindow* window;
 static bool shouldExit = false;
-static bool windowControlPanel = true, windowPhysicalKeyboard = false;
+static bool windowControlPanel = false, windowPhysicalKeyboard = true;
 
 // Variables
 static int generations = 100;
@@ -24,7 +25,7 @@ int cleanupGui();
 void drawGui();
 void drawMainMenuBar();
 void drawControlPanel();
-void drawKeyboard();
+void drawKeyboardPanel();
 
 int setupGui() {
 	if (!glfwInit()) {
@@ -99,7 +100,7 @@ void drawGui() {
 	if (windowControlPanel)
 		drawControlPanel();
 	if (windowPhysicalKeyboard)
-		drawKeyboard();
+		drawKeyboardPanel();
 
 	// Render GUI
 	ImGui::Render();
@@ -159,7 +160,7 @@ void drawControlPanel() {
 	ImGui::End();
 }
 
-void drawKeyboard() {
+void drawKeyboardPanel() {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(50.0f, 50.0f));
     ImGui::Begin("Custom Keyboard", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 
@@ -174,26 +175,41 @@ void drawKeyboard() {
     // Key dimensions and spacing
     const float keyWidth = 40.0f;
     const float keyHeight = 40.0f;
-    const float keySpacingX = 5.0f;
-    const float keySpacingY = 5.0f;
+    const float keySpacingX = keyWidth + 5.0f;
+    const float keySpacingY = keyHeight + 5.0f;
 
     // Starting position for the keyboard relative to the frame
     float startX = 50.0f, startY = 50.0f;
     float x = startX, y = startY;
 
     // Loop through rows
-    for (int row = 0; row < 4; row++) {
-        x = startX + row * keySpacingX;
-        for (const char* c = rows[row]; *c; ++c) {
-            ImGui::SetCursorPos(ImVec2(x, y));
-            if (ImGui::Button(std::string(1, *c).c_str(), ImVec2(keyWidth, keyHeight))) {
-                // std::cout << "Key Pressed: " << *c << std::endl;
-            }
-            x += keyWidth + keySpacingX;
-        }
-        y += keyHeight + keySpacingY;
-    }
+	for (int i = 0; i < keyboard.keys.size(); i++) {
+		Key& key = keyboard.keys[i];
+		ImGui::SetCursorPos(ImVec2(key.x * keySpacingX + startX, key.y * keySpacingY + startY));
+		if (ImGui::Button((std::to_string(i)).c_str(), ImVec2(keyWidth, keyHeight))) {
+			std::cout << "Key Pressed" << std::endl;
+		}
+	}
 
 	ImGui::PopStyleVar();
-    ImGui::End();
+	if(ImGui::CollapsingHeader("Physical Keyboard Customization")) {
+		// Procedurally generate keyboard tree
+		if (ImGui::TreeNode("Keyboard Data")) {
+			for (size_t i = 0; i < keyboard.keys.size(); ++i) {
+				Key& key = keyboard.keys[i]; // Use reference to allow modifications
+
+				if (ImGui::TreeNode((std::to_string(i+1) + " Key (" + std::to_string(key.x) + ", " + std::to_string(key.y) + ")").c_str())) {
+					ImGui::InputInt("X Position", &key.x);
+					ImGui::InputInt("Y Position", &key.y);
+					ImGui::InputInt("Finger", &key.finger);
+					ImGui::InputInt("Hand", &key.hand);
+
+					ImGui::TreePop(); // Close the key node
+				}
+			}
+			ImGui::TreePop(); // Close the keyboard node
+		}
+	}
+
+	ImGui::End();
 }
