@@ -1,12 +1,12 @@
 #include "optimize.h"
-#include <iostream>
+#include "threading.h"
+#include "settings.h"
 #include <random>
 #include <string>
-#include <vector>
 #include <algorithm>
 #include <deque>
+#include <iostream>
 
-PhysicalKeyboard keyboard;
 PhysicalKeyboard::PhysicalKeyboard() {
 	keys = {
 		{0, 0, 0, 0}, {1, 0, 1, 0}, {2, 0, 2, 0}, {3, 0, 3, 0}, {4, 0, 4, 0},
@@ -27,27 +27,18 @@ std::vector<std::vector<char>> selectPopulation(const std::vector<std::vector<ch
 std::vector<char> crossover(const std::vector<char>& parent1, const std::vector<char>& parent2);
 void mutate(std::vector<char>& layout, float mutationRate);
 std::vector<char> findBestLayout(const std::vector<std::vector<char>>& population);
-
 // Main function
 int runAlgorithm() {
-    // Parameters for genetic algorithm
     std::string characters = "abcdefghijklmnopqrstuvwxyz";
-    int populationSize = 1000;
-    int generations = 1000;
-    float mutationRate = 0.05;
-
-    // Initialize keyboard and population
     auto population = initializePopulation(populationSize, characters);
 
     // Run genetic algorithm
     for (int gen = 0; gen < generations; ++gen) {
-        // Calculate fitness
         std::vector<double> fitness;
         for (const auto& layout : population) {
             fitness.push_back(layoutValue(layout));
         }
 
-        // Select and reproduce
         auto selected = selectPopulation(population, fitness, populationSize / 2);
         std::vector<std::vector<char>> newPopulation = selected;
 
@@ -61,16 +52,12 @@ int runAlgorithm() {
 
         population = newPopulation;
 
-        // Log best layout
-        // auto bestLayout = findBestLayout(population);
-        // double bestFitness = layoutValue(bestLayout);
-        // std::cout << "Generation " << gen + 1 << ": Best Fitness = " << bestFitness << " | " << std::string(bestLayout.begin(), bestLayout.end()) << std::endl;
+		// Update the best layout
+		std::vector<char> logBestLayout = findBestLayout(population);
+		updateBestLayout(logBestLayout);
+		double bestFitness = layoutValue(logBestLayout);
+		std::cout << "Best Fitness = " << bestFitness << " | " << std::string(logBestLayout.begin(), logBestLayout.end()) << std::endl;
     }
-
-	// Log last best layout
-	auto bestLayout = findBestLayout(population);
-	double bestFitness = layoutValue(bestLayout);
-	std::cout << "Best Fitness = " << bestFitness << " | " << std::string(bestLayout.begin(), bestLayout.end()) << std::endl;
 
     return 0;
 }
@@ -143,16 +130,16 @@ void mutate(std::vector<char>& layout, float mutationRate) {
 }
 
 std::vector<char> findBestLayout(const std::vector<std::vector<char>>& population) {
-    double bestFitness = -1e9; // A very low initial value
-    std::vector<char> bestLayout;
+    double bestFitness = -1e9;
+	std::vector<char> bestLayoutTracker;
 
     for (const auto& layout : population) {
         double fitness = layoutValue(layout);
         if (fitness > bestFitness) {
             bestFitness = fitness;
-            bestLayout = layout;
+            bestLayout = bestLayoutTracker;
         }
     }
 
-    return bestLayout;
+    return bestLayoutTracker;
 }

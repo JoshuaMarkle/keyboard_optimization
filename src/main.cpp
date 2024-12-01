@@ -1,11 +1,20 @@
 #include "gui.h"
+#include "settings.h"
+#include "threading.h"
+
+// Global variables
+std::vector<char> bestLayout;
+PhysicalKeyboard keyboard;
+
+// Optimization Variables
+int populationSize = 1000;
+int generations = 1000;
+float mutationRate = 0.1f;
+float weightDistance = 1.0f, weightEffort = 1.0f;
 
 int main() {
 	setupGui();
-	while (true) {
-		if (guiLoop())
-			break;
-	}
+	while (!guiLoop()) {}
 	cleanupGui();
 	return 0;
 }

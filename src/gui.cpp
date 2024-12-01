@@ -1,5 +1,7 @@
 #include "gui.h"
 #include "optimize.h"
+#include "settings.h"
+#include "threading.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -12,12 +14,7 @@ const int WIDTH = 800, HEIGHT = 600;
 // Windows
 static GLFWwindow* window;
 static bool shouldExit = false;
-static bool windowControlPanel = false, windowPhysicalKeyboard = true;
-
-// Variables
-static int generations = 100;
-static float mutationRate = 0.1f;
-static float weightDistance = 1.0f, weightEffort = 1.0f;
+static bool windowControlPanel = true, windowStatistics = false, windowPhysicalKeyboard = false;
 
 int setupGui();
 int guiLoop();
@@ -25,6 +22,7 @@ int cleanupGui();
 void drawGui();
 void drawMainMenuBar();
 void drawControlPanel();
+void drawStatisticsPanel();
 void drawKeyboardPanel();
 
 int setupGui() {
@@ -99,6 +97,8 @@ void drawGui() {
 	drawMainMenuBar();
 	if (windowControlPanel)
 		drawControlPanel();
+	if (windowStatistics)
+		drawStatisticsPanel();
 	if (windowPhysicalKeyboard)
 		drawKeyboardPanel();
 
@@ -134,7 +134,9 @@ void drawMainMenuBar() {
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Control Panel", nullptr, windowControlPanel))
 				windowControlPanel = !windowControlPanel;
-            if (ImGui::MenuItem("Physical Keyboard", nullptr, windowPhysicalKeyboard))
+            if (ImGui::MenuItem("Statistics", nullptr, windowStatistics))
+				windowStatistics = !windowStatistics;
+            if (ImGui::MenuItem("Keyboard Editor", nullptr, windowPhysicalKeyboard))
 				windowPhysicalKeyboard = !windowPhysicalKeyboard;
             ImGui::EndMenu();
         }
@@ -145,8 +147,6 @@ void drawMainMenuBar() {
 
 void drawControlPanel() {
 	ImGui::Begin("Control Panel");
-	if (ImGui::Button("Start Optimization"))
-		std::cout << "START OPTIMIZATION" << std::endl;
 	if (ImGui::CollapsingHeader("Optimization Algorithm", ImGuiTreeNodeFlags_DefaultOpen)) {
 		// ImGui::SeparatorText("Parameters");
 		ImGui::InputInt("Generations", &generations);
@@ -157,6 +157,28 @@ void drawControlPanel() {
 		ImGui::SliderFloat("Distance", &weightDistance, 0.0f, 1.0f);
 		ImGui::SliderFloat("Effort", &weightEffort, 0.0f, 1.0f);
 	}
+	if (!simulationRunning) {
+		if (ImGui::Button("Start Optimization")) {
+			windowStatistics = true;
+			simulationRunning = true;
+			startOptimization();
+		}
+	} else {
+		if (ImGui::Button("Stop Optimization")) {
+			stopOptimization();
+		}
+	}
+	ImGui::End();
+}
+
+void drawStatisticsPanel() {
+	ImGui::Begin("Statistics Panel");
+	if (simulationRunning) 
+		ImGui::Text("Simulation is Running: True");
+    else 
+		ImGui::Text("Simulation is Running: False");
+	ImGui::Text(("Generation: " + std::to_string(1)).c_str());
+	ImGui::Text(("Best Layout: " + getBestLayout()).c_str());
 	ImGui::End();
 }
 
@@ -164,27 +186,18 @@ void drawKeyboardPanel() {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(50.0f, 50.0f));
     ImGui::Begin("Custom Keyboard", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 
-    // Define the keyboard layout
-    const char* rows[] = {
-        "1234567890",
-        "QWERTYUIOP",
-        "ASDFGHJKL",
-        "ZXCVBNM"
-    };
-
     // Key dimensions and spacing
+    const float startX = 50.0f, startY = 50.0f;
     const float keyWidth = 40.0f;
     const float keyHeight = 40.0f;
     const float keySpacingX = keyWidth + 5.0f;
     const float keySpacingY = keyHeight + 5.0f;
 
-    // Starting position for the keyboard relative to the frame
-    float startX = 50.0f, startY = 50.0f;
-    float x = startX, y = startY;
-
-    // Loop through rows
-	for (int i = 0; i < keyboard.keys.size(); i++) {
+    // Draw keyboard
+	int lowestKeyY = keyboard.keys[0].y;
+	for (size_t i = 0; i < keyboard.keys.size(); i++) {
 		Key& key = keyboard.keys[i];
+		lowestKeyY = std::min(lowestKeyY, key.y);
 		ImGui::SetCursorPos(ImVec2(key.x * keySpacingX + startX, key.y * keySpacingY + startY));
 		if (ImGui::Button((std::to_string(i)).c_str(), ImVec2(keyWidth, keyHeight))) {
 			std::cout << "Key Pressed" << std::endl;

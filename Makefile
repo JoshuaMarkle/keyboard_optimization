@@ -17,9 +17,9 @@ SRC = $(IMGUI_DIR)/imgui.cpp \
       $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp \
       $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp \
 	  $(SRC_DIR)/main.cpp \
+      $(SRC_DIR)/optimize.cpp \
       $(SRC_DIR)/gui.cpp \
-      $(SRC_DIR)/optimize.cpp
-      # $(SRC_DIR)/graphics.cpp \
+      $(SRC_DIR)/threading.cpp
 
 # Object files in the obj directory
 OBJ = $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(SRC))
